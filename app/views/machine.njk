@@ -1,6 +1,20 @@
 {% extends 'layout.njk' %}
 
 {% block content %}
+
+<script>
+  let backupCalendar = [[], [], [], [], []];
+  {% for week in backupCalendar %}
+      {% for day in week %}
+        backupCalendar[0].push("{{day.bucket}}");
+        backupCalendar[1].push("{{day.today}}")
+        backupCalendar[2].push("{{day.bucket.backup}}")
+        backupCalendar[3].push("{{day.id}}")
+        backupCalendar[4].push("{{day.date}}")
+      {% endfor %}
+  {% endfor %}
+</script>
+
   <div>
     <div class="ui fluid stackable grid" id="dashboard-header-grid">
       <div class="row" id="dashboard-header-row-top">
@@ -9,41 +23,9 @@
           <h1>Machine: {{ machine.name }}</h1>
           <h1></h1>
         </div>
+
         <div class="ten wide column">
-          <table class="ui celled unstackable table">
-            <thead>
-              <tr>
-                <th>Sa</th>
-                <th>M</th>
-                <th>Tu</th>
-                <th>W</th>
-                <th>Th</th>
-                <th>F</th>
-                <th>Su</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for week in backupCalendar %}
-                <tr>
-                  {% for day in week %}
-                    <td class="
-                      {{ 'disabled' if not day.bucket }}
-                      {{ 'machine-dashboard-calendar-today-border' if day.today }}
-                      {{ 'positive' if day.bucket and day.bucket.backup }}
-                      {{ 'negative' if day.bucket and not day.bucket.backup }}
-                      {{ 'selectable' if day.id }}
-                    ">
-                      {% if day.id %}
-                        <a href="#backupevent-{{ day.id }}">{{ day.dateString }}</a>
-                      {% else %}
-                        {{ day.dateString }}
-                      {% endif %}
-                    </td>
-                  {% endfor %}
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div class="ui calendar" id="inline_calendar"></div>
         </div>
       </div>
 
@@ -102,6 +84,8 @@
 {% endblock %}
 
 {% block js %}
-{#  <script src="/js/vendor/jquery.tablesort.min.js"></script>#}
-{#  <script src="/js/machine.js"></script>#}
+ <script src="/js/machine.js"></script>
+ <script>
+  generateCalendar(backupCalendar)
+ </script>
 {% endblock %}
