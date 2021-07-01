@@ -2,19 +2,6 @@
 
 {% block content %}
 
-<script>
-  let backupCalendar = [[], [], [], [], []];
-  {% for week in backupCalendar %}
-      {% for day in week %}
-        backupCalendar[0].push("{{day.bucket}}");
-        backupCalendar[1].push("{{day.today}}")
-        backupCalendar[2].push("{{day.bucket.backup}}")
-        backupCalendar[3].push("{{day.id}}")
-        backupCalendar[4].push("{{day.date}}")
-      {% endfor %}
-  {% endfor %}
-</script>
-
   <div>
     <div class="ui fluid stackable grid" id="dashboard-header-grid">
       <div class="row" id="dashboard-header-row-top">
@@ -24,7 +11,7 @@
           <h1></h1>
         </div>
         <div class="ten wide column">
-          <div class="ui calendar" id="inline_calendar"></div>
+          <div class="ui calendar" id="inline-calendar"></div>
         </div>
       </div>
 
@@ -83,6 +70,21 @@
 {% endblock %}
 
 {% block js %}
+ <script>
+  let backupCalendar = [];
+  {% for week in backupCalendar %}
+    {% for day in week %}
+      cell = {
+        bucket: "{{day.bucket}}",
+        today: "{{day.today}}",
+        backup: "{{day.bucket.backup}}",
+        id: "{{day.id}}",
+        date: "{{day.date}}",
+      }
+      backupCalendar.push(cell)
+    {% endfor %}
+  {% endfor %}
+ </script>
  <script src="/js/machine.js"></script>
  <script>
   generateCalendar(backupCalendar)

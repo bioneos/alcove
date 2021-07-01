@@ -76,7 +76,7 @@ function getBackupEvents(machine, CALENDAR_ROWS = 5)
       id: undefined,
       bucket: false
     });
-  }  
+  }
 
   // Get information about today on the calendar
   calendar[(CALENDAR_ROWS - 1) * 7 + today.getDay()].date = today;
