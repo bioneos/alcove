@@ -74,19 +74,18 @@
   let backupCalendar = [];
   {% for week in backupCalendar %}
     {% for day in week %}
-      cell = {
+      backupCalendar.push({
         bucket: "{{day.bucket}}",
         today: "{{day.today}}",
         backup: "{{day.bucket.backup}}",
         id: "{{day.id}}",
         date: "{{day.date}}",
-      }
-      backupCalendar.push(cell)
+      });
     {% endfor %}
   {% endfor %}
  </script>
  <script src="/js/machine.js"></script>
  <script>
-  generateCalendar(backupCalendar)
+  generateCalendar(backupCalendar);
  </script>
 {% endblock %}
