@@ -6,14 +6,14 @@ function generateCalendar(calendar) {
     let className;
     if (calendar[i].bucket !== 'false')
     {
-      if (calendar[i].backup !== '') className = 'positive';
+      if (calendar[i].backup !== '') className = 'positive machine-dashboard-link-non-selectable';
       else className = 'negative machine-dashboard-link-non-selectable';
-      if (calendar[i].today === 'true') className += ' machine-dashboard-calendar-today-border';
+      if (calendar[i].today === 'true') className += ' machine-dashboard-calendar-today-border-non-selectable';
     }
     else
     {
-      className = 'machine-dashboard-disabled'
-      if (calendar[i].today === 'true') className += 'machine-dashboard-calendar-today-border';
+      className = 'machine-dashboard-non-selectable';
+      if (calendar[i].today === 'true') className += 'machine-dashboard-calendar-today-border-non-selectable';
     }
     eventDates.push({date: new Date(calendar[i].date), class: className});
   }
@@ -22,8 +22,6 @@ function generateCalendar(calendar) {
       eventDates: eventDates,
       disableMinute: true,
       type: 'date',
-      onSelect: function(date, model) {
-        date = String(date);
-      }
+      selectAdjacentDays: true,
     });
 }
