@@ -25,3 +25,4 @@ function generateCalendar(calendar) {
       selectAdjacentDays: true,
     });
 }
+//test
