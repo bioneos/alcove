@@ -1,3 +1,4 @@
+//test
 'use strict';
 const DEVEL = (process.env.NODE_ENV !== "production");
 const CONFIG = (DEVEL ? "." : "") + "/etc/alcove/alcove.ini";
