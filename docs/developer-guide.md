@@ -97,7 +97,8 @@ apt-get install sqlite3
 
 To run Alcove, you must create a system configuration and any number of machine configurations. The system configuration controls general behavior such as where to send email notifications, and each machine configuration specifies how to back up that machine.
 
-To create a system configuration, create a file in `<project_root>/etc/alcove` called `alcove.ini` with the contents of `<project_root>/config/alcove.ini.example`. Then, go through the file and uncomment/set the following settings:
+To create a system configuration, create a file in `<project_root>/etc/alcove` (create the folder(s) if they don't already exist) called
+`alcove.ini` with the contents of `<project_root>/config/alcove.ini.example`. Then, go through the file and uncomment/set the following settings:
 
 | Option Name | Option Value | Explanation |
 |:------------|:-------------|:------------|
@@ -107,15 +108,15 @@ To create a system configuration, create a file in `<project_root>/etc/alcove` c
 | `secure.cert` | `'./etc/alcove/ssl/ssl.crt'` | Uses `ssl.crt` for HTTPS |
 | `summary_schedule` | `'0,1,2,3,4,5,6;[17:01]'` | Sends summary emails at 17:01 UTC every day of the week |
 | `email_to[]` | `'your.email@gmail.com'` | Where to send summary emails; this should probably be a spam email |
-| `email_from` | `'your.email@gmail.com'` | Where to send summary emails from; this can be the same as `email_to[]`; if you are using a Gmail account, you must allow access from "less secure apps" as per [this article](https://support.google.com/accounts/answer/6010255) |
+| `email_from` | `'your.email@gmail.com'` | Where to send summary emails from; this can be the same as `email_to[]`; if you are using a Gmail account, you must allow access from "less secure apps". To allow this, create an "app password" via [these instructions](https://support.google.com/accounts/answer/185833?hl=en) |
 | `notifications.smtp.host` | `'smtp.gmail.com'` | The host of the SMTP server; `smtp.gmail.com` if `email_from` is a Gmail account |
 | `notifications.smtp.port` | `587` | The port of the SMTP server; `587` if `email_from` is a Gmail account |
 | `notifications.smtp.user` | `'your.email@gmail.com'` | The same email as `email_from` |
-| `notifications.smtp.pass` | `'your_password'` | The password to `email_from` |
+| `notifications.smtp.pass` | `'your_password'` | The password to `email_from` **NOTE: If this is a Gmail account, use your app password** |
 
 [Here](./developer-config-examples.md#system-configuration) is the full system configuration file if you want to copy and paste it.
 
-Creating a machine configuration file is much simpler. Simply create a file in `<project_root>/etc/alcove/machines` called `machine.ini` with the contents of `<project_root>/config/machines/machine.ini.example`. Then, go through the file and uncomment/set the following settings:
+Creating a machine configuration file is much simpler. Simply create a file in `<project_root>/etc/alcove/machines` (Creating any directories that may not already exist) called `machine.ini` with the contents of `<project_root>/config/machines/machine.ini.example`. Then, go through the file and uncomment/set the following settings:
 
 | Option Name | Option Value | Explanation |
 |:------------|:-------------|:------------|
@@ -125,7 +126,7 @@ Creating a machine configuration file is much simpler. Simply create a file in `
 | `ignore_extensions[]` | `.testignored` | Does not back up files with the extension `.testignored` |
 | `ignore_files[]` | `/backup-test/ignored` | Does not back up files in the directory `/backup-test/ignored` |
 | `ignore_files[]` | `/backup-test/ignore-me.txt` | Does not back up the file `/backup-test/ignore-me.txt` |
-| `schedule` | `"0,1,2,3,4,5,6(7)\|1(4);[17:00]"` | Backs up the machine at 17:00 UTC every day; keeps the last 7 copies of backups from everyday and the last 4 copies of Monday backups |
+| `schedule` | `"0,1,2,3,4,5,6(7)\|1(4);[17:00]"` | Backs up the machine at 17:00 UTC every day; keeps the last 7 copies of backups from everyday and the last 4 copies of Monday backups **NOTE: When copying this value directly from the markdown file, remove the backslash. It is only present to correctly format the table in markdown.** |
 
 [Here](./developer-config-examples.md#machine-configuration) is the full machine configuration file if you want to copy and paste it.
 
@@ -137,14 +138,14 @@ To finish up your configuration, you need to create some mock files on which to 
 mkdir /backup-test && echo "This file should be ignored because of its extension" > /backup-test/ext-ignore.testignored && echo "This file should be backed up" > /backup-test/essay.txt && echo "This Markdown file should be backed up" > /backup-test/another-file.md && mkdir /backup-test/ignored && echo "This file should be ignored because of the directory in which it is located" > /backup-test/ignored/dir-ignore.txt && echo "This file should be ignored because it is specifically ignored in the machine config" > /backup-test/ignore-me.txt
 ```
 
-Next, to enable HTTPS on the monitoring interface, you need to generate an SSL certificate. To do this, create an `ssl` folder in the `<project_root>/etc/alcove` directory. Then, run the following two commands (from the container) in that folder:
+Next, to enable HTTPS on the monitoring interface, you need to generate an SSL certificate. To do this, create an `ssl` folder in the `<project_root>/etc` directory. Then, run the following two commands (from the container) in that folder:
 
 ```shell script
 openssl ecparam -out ssl.key -name prime256v1 -genkey
 openssl req -x509 -new -key ssl.key -out ssl.crt -days 365 -subj "/C=US/ST=Iowa/L=Coralville/O=Bio::Neos, Inc./CN=localhost"
 ```
 
-When you're done, you can `cd` back to the project root.
+When you're done, you can run `cd <the project_root absolute path>` to go back to the project root.
 
 The final step is to generate an SSH key for connecting to machines (in this case, just `localhost`). To generate the key, run the following command and choose the default settings whenever prompted (this means you should accept the default location and not use a password):
 
@@ -236,9 +237,11 @@ Alcove schedules backups in `<project_root>/lib/system.js` by reading the schedu
 
 Before beginning work on Alcove, you should read the [design guide](design-guide.md). This guide explains much of the thinking behind why Alcove works the way it does.
 
+You should also check out [this file](./backup-process-guide.excalidraw) by opening it at https://excalidraw.com (or if you're using Visual Studio Code, open it with the Excalidraw extension). This contains a flowchart that further explains how the backup process works.
+
 In addition, you should read this [article](https://nvie.com/posts/a-successful-git-branching-model/) about GitFlow. Alcove uses GitFlow to maintain a simple version history.
 
-You should also take note of two other docs:
+Also, take note of two other docs:
 
 - The exit codes [guide](exit-codes.md) explains what each exit code means.
 - The SMS [guide](sms-guide.md) explains how to set up SMS notifications (in addition to regular email notifications).

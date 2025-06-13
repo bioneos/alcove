@@ -1,16 +1,61 @@
 {% extends 'layout.njk' %}
 
 {% block content %}
+<head>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
+</head>
   <div>
     <div class="ui fluid stackable grid" id="dashboard-header-grid">
       <div class="row" id="dashboard-header-row-top">
         <div class="six wide column">
           <a href="/dashboard"><img id="dashboard-logo" src="/logo.png"></a>
-          <h1>Machine: {{ machine.name }}</h1>
-          <h1></h1>
+          <h1 id="machine-name-text">Machine: {{ machine.name }}</h1>
+          {% if showRequestedBackups and showScheduledBackups %}
+            <h2 id="subheader">Showing: All backups</h2>
+          {% elif showRequestedBackups %}
+            <h2 id="subheader">Showing: Requested backups</h2>
+          {% elif showScheduledBackups %}
+            <h2 id="subheader">Showing: Scheduled backups</h2>
+          {% else %}
+            <h2 id="subheader">Click one of the buttons to show backups</h2>
+          {% endif %}
+          <button id="backup-now-button">Backup now</button>
+          {% if showRequestedBackups %}
+            <button class="filter-button" id="hide-requested-backups-button">Hide requested backups</button>
+          {% else %}
+            <button class="filter-button" id="hide-requested-backups-button">Show requested backups</button>
+          {% endif %}
+          {% if showScheduledBackups %}
+            <button class="filter-button" id="hide-scheduled-backups-button">Hide scheduled backups</button>
+          {% else %}
+            <button class="filter-button" id="hide-scheduled-backups-button">Show scheduled backups</button>
+          {% endif %}
         </div>
         <div class="ten wide column">
           <div class="ui calendar" id="inline-calendar"></div>
+          <div id="schedule-description-container">
+            <h3 class="schedule-description">
+              Backing up
+              {% if scheduleInfo.backupEveryday %}
+                <span class="backup-day"> everyday </span>
+              {% elif scheduleInfo.backupEverydayExcept %}
+                everyday <span id="except-backup-day">except {{ scheduleInfo.backupEverydayExcept }}</span>
+              {% else %}
+                every 
+                <span class="backup-day">
+                  {% for i in range(0, scheduleInfo.scheduledDays.length) %}
+                    {{ scheduleInfo.scheduledDays[i] + ("," if i != scheduleInfo.scheduledDays.length - 1) + (" and " if i == scheduleInfo.scheduledDays.length - 2) }}
+                  {% endfor %}
+                </span>
+              {% endif %}
+            </h3>
+            <h3 class="schedule-description">at
+              <span class="backup-time">{{ scheduleInfo.backupTime }}</span>
+            </h3>
+          </div>
         </div>
       </div>
 
@@ -37,7 +82,11 @@
           <table class="ui striped selectable sortable celled table" id="machine-table">
             <thead>
             <tr>
-              <th class="collapsing">Backup Time</th>
+              {% if gmtOffsetHours >= 0 %}
+                <th class="collapsing">Backup Time (GMT +{{ gmtOffsetHours }}:00)</th>
+              {% else %}
+                <th class="collapsing">Backup Time (GMT {{ gmtOffsetHours }}:00)</th>
+              {% endif %}
               <th class="collapsing">Size on Disk</th>
               <th class="collapsing">Transfer Size</th>
               <th class="collapsing">Transfer Time</th>
@@ -46,20 +95,52 @@
             </tr>
             </thead>
             <tbody>
-            {% for backupEvent in backupEvents %}
-              <tr>
-                {% if backupEvent.rsyncExitCode %}
-                  <td class="collapsing negative"><i class="exclamation circle icon"></i>{{ backupEvent.date }}</td>
-                {% else %}
-                  <td class="collapsing positive"><i class="check circle icon"></i>{{ backupEvent.date }}</td>
-                {% endif %}
-                <td class="collapsing">{{ backupEvent.size }}</td>
-                <td class="collapsing">{{ backupEvent.transferSize }}</td>
-                <td class="collapsing">{{ backupEvent.transferTimeSec }}</td>
-                <td class="collapsing">{{ backupEvent.rsyncExitCode }}</td>
-                <td>{{ backupEvent.rsyncExitReason }}</td>
-              </tr>
-            {% endfor %}
+            {% if showRequestedBackups %}
+              {% for backupEvent in requestedBackupEvents %}  {# Always display requestedBackupEvents first #}
+                <tr>
+                  {% if backupEvent.rsyncExitCode %}
+                    <td class="collapsing negative">
+                      <i class="user circle icon" title="This backup was requested by a user."></i>
+                      <i class="exclamation circle icon" title="This backup was not successful."></i>
+                      {{ backupEvent.date }}
+                    </td>
+                  {% else %}
+                    <td class="collapsing positive">
+                      <i class="user circle icon" title="This backup was requested by a user."></i>
+                      <i class="check circle icon" title="This backup was successful."></i>
+                      {{ backupEvent.date }}
+                    </td>
+                  {% endif %}
+                  <td class="collapsing">{{ backupEvent.size }}</td>
+                  <td class="collapsing">{{ backupEvent.transferSize }}</td>
+                  <td class="collapsing">{{ backupEvent.transferTimeSec }}</td>
+                  <td class="collapsing">{{ backupEvent.rsyncExitCode }}</td>
+                  <td>{{ backupEvent.rsyncExitReason }}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+            {% if showScheduledBackups %}
+              {% for backupEvent in backupEvents %}
+                <tr>
+                  {% if backupEvent.rsyncExitCode %}
+                    <td class="collapsing negative">
+                      <i class="exclamation circle icon" title="This backup was not successful."></i>
+                      {{ backupEvent.date }}
+                    </td>
+                  {% else %}
+                    <td class="collapsing positive">
+                      <i class="check circle icon" title="This backup was successful."></i>
+                      {{ backupEvent.date }}
+                    </td>
+                  {% endif %}
+                  <td class="collapsing">{{ backupEvent.size }}</td>
+                  <td class="collapsing">{{ backupEvent.transferSize }}</td>
+                  <td class="collapsing">{{ backupEvent.transferTimeSec }}</td>
+                  <td class="collapsing">{{ backupEvent.rsyncExitCode }}</td>
+                  <td>{{ backupEvent.rsyncExitReason }}</td>
+                </tr>
+              {% endfor %}
+            {% endif %}
             </tbody>
           </table>
         </div>
@@ -72,6 +153,72 @@
 {#  <script src="/js/vendor/jquery.tablesort.min.js"></script>#}
 {#  <script src="/js/machine.js"></script>#}
  <script>
+  // Handles a loading indicator element on the page while a backup is being made
+  function loadNewBackup(machineName) {
+    const interval = setInterval(() => {
+      const getMachineStatus = new Promise((res, rej) => {
+        fetch(`/api/machine/${machineName}/backup-status`)
+          .then(data => {
+            data.json().then(jsonData => {
+              if (!jsonData.loading) {
+                clearInterval(interval);
+                res();
+              }
+            });
+          })
+          .catch(err => {
+            clearInterval(interval);
+            rej(err);
+          });
+      });
+
+      getMachineStatus
+        .finally(() => location.assign(new URL(location.href)));
+    }, 1000);
+  }
+
+  function sendBackupRequest(machineName) {
+    const machineNameElement = document.getElementById('machine-name-text');
+    machineNameElement.innerText = "Backing up {{ machine.name }}..."
+
+    machineNameElement.classList.add(
+      'animate__animated',
+      'animate__flash',
+      'animate__infinite',
+      'animate__slower',
+    );
+
+    fetch(`/api/machine/${machineName}/backup-now`)
+      .then(data => {
+        console.log(data);
+      })
+      .catch(err => {
+        console.error('Error fetching machine data:', err);
+      });
+
+      loadNewBackup(machineName);
+  }
+
+  function toggleRequestedBackups() {
+    const url = new URL(location.href);
+    url.searchParams.set('showRequestedBackups', !{{ showRequestedBackups }});
+    location.assign(url.search);
+  }
+
+  function toggleScheduledBackups() {
+    const url = new URL(location.href);
+    url.searchParams.set('showScheduledBackups', !{{ showScheduledBackups }});
+    location.assign(url.search);
+  }
+
+  const backupNowButton = document.getElementById('backup-now-button');
+  const hideRequestedBackupsButton = document.getElementById('hide-requested-backups-button');
+  const hideScheduledBackupsButton = document.getElementById('hide-scheduled-backups-button');
+
+  backupNowButton.addEventListener('click', () => sendBackupRequest("{{ machine.name }}"));
+  hideRequestedBackupsButton.addEventListener('click', toggleRequestedBackups);
+  hideScheduledBackupsButton.addEventListener('click', toggleScheduledBackups);
+
   let backupCalendar = [];
   {% for week in backupCalendar %}
     {% for day in week %}

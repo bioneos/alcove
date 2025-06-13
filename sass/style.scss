@@ -128,6 +128,50 @@ body
   float:right;
 }
 
+#gmt-offset-panel {
+  align-self: center;
+  width: 50%;
+  transform: translate(50%, 0);
+}
+
+#gmt-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#gmt-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+#gmt-input {
+  height: 20px;
+  width: 40px;
+  margin-left: 5px;
+  margin-bottom: 10px;
+}
+
+#extra-gmt-text {
+  margin-left: 5px;
+  margin-bottom: 10px;
+}
+
+#gmt-description {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+}
+
+.gmt-child {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-direction: row;
+}
+
 .dashboard-header-segment
 {
   text-align:center;
@@ -137,6 +181,59 @@ body
 
 
 /* Machine Dashboard */
+#backup-now-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  background-color: forestgreen;
+  align-self: flex-end;
+  margin-right: 10px;
+
+  justify-self: center;
+  justify-content: center;
+}
+
+#backup-now-button:hover {
+  background-color: rgb(25, 103, 25);
+}
+
+.filter-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  background-color: #4b94cb;
+  margin-right: 10px;
+}
+
+.filter-button:hover {
+  background-color: #4172b0;
+}
+
+@media only screen and (max-width: 1452px) {
+  #backup-now-button {
+    width: 170px;
+    position: absolute;
+    padding: 5px 10px;
+    left: 14px;
+  }
+
+  #hide-requested-backups-button {
+    position: absolute;
+    padding: 5px 10px;
+    left: 14px;
+    bottom: 13%;
+  }
+
+  #hide-scheduled-backups-button {
+    position: absolute;
+    padding: 5px 10px;
+    left: 14px;
+    bottom: 0%
+  }
+}
+
 .machine-dashboard-calendar-today-border
 {
   border: 1px solid black !important;
@@ -196,6 +293,32 @@ body
     width: var(--bar-value);
     float: left;
     height: 100%;
+  }
+  .backup-day {
+    color: green;
+    font-style: italic;
+  }
+  .backup-time {
+    color: darkcyan;
+    font-style: italic;
+  }
+  .backup-amount {
+    color: darkcyan;
+    font-style: italic;
+  }
+
+  #except-backup-day {
+    color: #cb2727;
+    font-style: italic;
+  }
+
+  .schedule-description {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  #schedule-description-container {
+    margin-top: 20px;
   }
    
   //chart legend

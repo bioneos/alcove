@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       'type' : DataTypes.STRING,
       'validate' : {
         'notEmpty' : {
-          'msg' : 'An machine name is required'
+          'msg' : 'A machine name is required'
         }
       }
     },

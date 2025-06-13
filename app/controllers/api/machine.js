@@ -1,33 +1,35 @@
 const express = require('express'),
 	router = express.Router(),
-	fs = require('fs'),
-	path = require('path'),
 	system = require('../../../lib/system'),
 	models = require('../../models'),
-	rsync = require('../../../lib/rsync'),
-	util = require('../../../lib/util');
+	rsync = require('../../../lib/rsync');
 
 let config, db;
 
 const logger = require('../../../lib/config/log4js').getLogger();
 
-router.get('/:name/trigger-backup', (req, res, next) => {
-	// Attempt to grab the machine that is requested
-	let machine = system.getMachines()[req.params.name];
-	
-	// the modified response object from the callback
-	let machineStats = {
-		name: machine.name,
-		size: machine.totalSize.size,
-		schedule: machine.schedule,
-		backupDirectories: machine.backupDirectories
-	};
+// Holds names of machine(s) that are currently being backed up
+let loadingMachineNames = [];
+
+// Endpoint that returns the backup status of a specified machine
+router.get('/:name/backup-status', (req, res, _next) => {
+	return res
+	.status(200)
+	.json({
+		success: true,
+		loading: loadingMachineNames.includes(req.params.name)
+	});
+});
+
+// Endpoint that creates an immediate backup a specified machine
+router.get('/:name/backup-now', async (req, res, _next) => {
+	const machine = system.getMachines()[req.params.name];
+
+	if (!loadingMachineNames.includes(req.params.name))
+		loadingMachineNames.push(req.params.name);
 
 	if (!machine) {
 		logger.warn(
-			'API Request for unknown machine with name: "' + req.params.name + '"'
-		);
-		console.log(
 			'API Request for unknown machine with name: "' + req.params.name + '"'
 		);
 
@@ -37,12 +39,25 @@ router.get('/:name/trigger-backup', (req, res, next) => {
 	}
 
 	// on success, send back the machineStats object from above
-	rsync.runRsync(system.getConfig(), machine, () => {
-		res.json({
-			success: true,
-			message: `backup successful`,
-			machineStats: `${JSON.stringify(machineStats)}`
-		});
+	// TODO: it might actually be worth running rsync here, because there would only be on flag that would need to be changed
+	rsync.runRequestedRsync(system.getConfig(), machine, (error, rsyncStats) => {
+		loadingMachineNames.splice(
+			loadingMachineNames.findIndex(machineName => machineName === req.params.name),
+			1
+		);
+	
+		if (error) {
+			logger.error('Error running requested rsync:', error);
+
+			system.insertRequestedBackupEvent(machine, rsyncStats);
+
+			return res.status(500).json({
+				success: false,
+				message: `Backup of ${machine.name} was not successful. Check the logs for more info.`,
+			});
+		}
+
+		system.insertRequestedBackupEvent(machine, rsyncStats);
 	});
 });
 
